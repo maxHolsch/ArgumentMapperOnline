@@ -134,4 +134,4 @@ Viterbi School of Engineering, University of Southern California.
 
 - Viterbi School of Engineering, USC
 - Assembly.ai for their transcription API
-- The open-source community behind Mermaid.js
+- The open-source community behind Mermaid.js, in particular Abdelhak Akermi's work on creating online mermaid visualizers 
