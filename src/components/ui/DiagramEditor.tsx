@@ -146,7 +146,8 @@ export default function DiagramEditor() {
           nodeElements.forEach(node => {
             const textElement = node.querySelector('text, .nodeLabel');
             if (textElement) {
-              node.style.cursor = 'pointer';
+              // Cast specifically to SVGElement since we're working with SVG nodes
+              (node as SVGElement).style.cursor = 'pointer';
               node.addEventListener('click', createEditHandler(textElement));
             }
           });
