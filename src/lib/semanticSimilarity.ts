@@ -1,5 +1,3 @@
-import { encode } from 'gpt-3-encoder'; // We'll need to add this package
-
 interface Vector {
   [key: string]: number;
 }
@@ -106,4 +104,49 @@ export function compareTexts(text1: string, text2: string): number {
   
   // Calculate cosine similarity
   return cosineSimilarity(tfidf1, tfidf2);
+}
+
+export function getCosineSimilarity(text1: string, text2: string): number {
+  // Convert texts to word vectors
+  const vector1 = textToVector(text1);
+  const vector2 = textToVector(text2);
+
+  // Calculate cosine similarity
+  const dotProduct = getDotProduct(vector1, vector2);
+  const magnitude1 = getMagnitude(vector1);
+  const magnitude2 = getMagnitude(vector2);
+
+  if (magnitude1 === 0 || magnitude2 === 0) return 0;
+  return dotProduct / (magnitude1 * magnitude2);
+}
+
+function textToVector(text: string): Vector {
+  const words = text.toLowerCase().split(/\W+/);
+  const vector: Vector = {};
+  
+  words.forEach(word => {
+    if (word) {
+      vector[word] = (vector[word] || 0) + 1;
+    }
+  });
+  
+  return vector;
+}
+
+function getDotProduct(vector1: Vector, vector2: Vector): number {
+  let dotProduct = 0;
+  
+  Object.keys(vector1).forEach(key => {
+    if (vector2[key]) {
+      dotProduct += vector1[key] * vector2[key];
+    }
+  });
+  
+  return dotProduct;
+}
+
+function getMagnitude(vector: Vector): number {
+  return Math.sqrt(
+    Object.values(vector).reduce((sum, value) => sum + value * value, 0)
+  );
 } 
