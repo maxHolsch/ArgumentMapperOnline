@@ -153,7 +153,8 @@ export default function DiagramEditor() {
           });
         }
       } catch (renderError) {
-        console.error('Mermaid render error:', renderError);
+        const errorMessage = renderError instanceof Error ? renderError.message : 'Unknown error';
+        console.error('Mermaid render error:', errorMessage);
         // Try re-initializing mermaid
         await mermaid.initialize({
           startOnLoad: false,
@@ -172,7 +173,9 @@ export default function DiagramEditor() {
     } catch (error) {
       console.error('Failed to render diagram:', error);
       if (diagramRef.current) {
-        diagramRef.current.innerHTML = `<div class="text-red-500">Failed to render diagram: ${error.message}</div>`;
+        // Type check the error and safely access the message property
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        diagramRef.current.innerHTML = `<div class="text-red-500">Failed to render diagram: ${errorMessage}</div>`;
       }
     }
   }, [code, mounted]);
@@ -239,7 +242,8 @@ export default function DiagramEditor() {
       mermaid.initialize(configObj);
       renderDiagram();
     } catch (error) {
-      console.error('Invalid config JSON:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error('Invalid config JSON:', errorMessage);
     }
   };
 
@@ -252,7 +256,8 @@ export default function DiagramEditor() {
         const decodedCode = atob(sharedCode);
         setCode(decodedCode);
       } catch (e) {
-        console.error('Failed to decode shared URL');
+        const errorMessage = e instanceof Error ? e.message : 'Unknown error';
+        console.error('Failed to decode shared URL:', errorMessage);
       }
     }
   }, []);
@@ -408,8 +413,9 @@ export default function DiagramEditor() {
       toast.success('Transcription completed!');
       
     } catch (error) {
-      console.error('Error in AssemblyAI pipeline:', error);
-      toast.error(`Transcription failed: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error('Error in AssemblyAI pipeline:', errorMessage);
+      toast.error(`Transcription failed: ${errorMessage}`);
     }
   };
 
@@ -476,7 +482,8 @@ export default function DiagramEditor() {
         toast.dismiss(loadingToast);
         toast.success('Transcript processed successfully!');
     } catch (error) {
-        console.error('Error processing transcript:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        console.error('Error processing transcript:', errorMessage);
         toast.error('Failed to process transcript');
     }
   };
