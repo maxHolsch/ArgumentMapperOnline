@@ -138,7 +138,7 @@ export default function DiagramEditor() {
           const textElements = svgElement.querySelectorAll('text');
           textElements.forEach(textElement => {
             textElement.style.cursor = 'pointer';
-            textElement.addEventListener('click', createEditHandler(textElement));
+            textElement.addEventListener('click', createEditHandler(textElement) as EventListener);
           });
 
           // Handle nodes (rectangles with text)
@@ -146,9 +146,9 @@ export default function DiagramEditor() {
           nodeElements.forEach(node => {
             const textElement = node.querySelector('text, .nodeLabel');
             if (textElement) {
-              // Cast specifically to SVGElement since we're working with SVG nodes
-              (node as SVGElement).style.cursor = 'pointer';
-              node.addEventListener('click', createEditHandler(textElement));
+              const svgNode = node as SVGElement;
+              svgNode.style.cursor = 'pointer';
+              svgNode.addEventListener('click', createEditHandler(textElement) as EventListener);
             }
           });
         }
@@ -178,7 +178,7 @@ export default function DiagramEditor() {
   }, [code, mounted]);
 
   // Separate the edit handler creation into its own function
-  const createEditHandler = (element: Element) => (e: MouseEvent) => {
+  const createEditHandler = (element: Element) => (e: Event) => {
     if (isPanning) return; // Don't edit text if we're panning
     
     e.stopPropagation();
@@ -190,7 +190,7 @@ export default function DiagramEditor() {
     const rect = element.getBoundingClientRect();
     const input = document.createElement('input');
     input.value = text;
-    input.style.position = 'fixed'; // Change to fixed positioning
+    input.style.position = 'fixed';
     input.style.left = `${rect.left}px`;
     input.style.top = `${rect.top}px`;
     input.style.width = `${Math.max(rect.width + 50, 100)}px`;
