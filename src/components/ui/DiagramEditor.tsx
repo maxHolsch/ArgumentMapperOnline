@@ -90,7 +90,7 @@ export default function DiagramEditor() {
   const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
   const [lastTranscript, setLastTranscript] = useState<string>('');
   if (!process.env.NEXT_PUBLIC_ASSEMBLY_AI_API_KEY) {
-    console.error('ASSEMBLY_AI_API_KEY is not set in environment variables');
+    console.error('NEXT_PUBLIC_ASSEMBLY_AI_API_KEY is not set in environment variables');
   }
 
   const ASSEMBLY_AI_API_KEY = process.env.NEXT_PUBLIC_ASSEMBLY_AI_API_KEY;
@@ -357,6 +357,10 @@ export default function DiagramEditor() {
 
   const uploadToAssemblyAI = async (audioBlob: Blob) => {
     try {
+      if (!process.env.NEXT_PUBLIC_ASSEMBLY_AI_API_KEY) {
+        throw new Error('Assembly AI API key is not configured');
+      }
+
       const loadingToast = toast.loading('Processing audio...');
 
       // Convert to base64
@@ -369,7 +373,7 @@ export default function DiagramEditor() {
       const uploadResponse = await fetch('https://api.assemblyai.com/v2/upload', {
         method: 'POST',
         headers: {
-          'authorization': ASSEMBLY_AI_API_KEY,
+          'authorization': process.env.NEXT_PUBLIC_ASSEMBLY_AI_API_KEY,
           'content-type': 'application/octet-stream',
         },
         body: audioBlob
@@ -387,7 +391,7 @@ export default function DiagramEditor() {
       const transcriptResponse = await fetch('https://api.assemblyai.com/v2/transcript', {
         method: 'POST',
         headers: {
-          'authorization': ASSEMBLY_AI_API_KEY,
+          'authorization': process.env.NEXT_PUBLIC_ASSEMBLY_AI_API_KEY,
           'content-type': 'application/json',
         },
         body: JSON.stringify({
@@ -420,12 +424,16 @@ export default function DiagramEditor() {
   };
 
   const pollTranscriptResult = async (transcriptId: string): Promise<string> => {
+    if (!process.env.NEXT_PUBLIC_ASSEMBLY_AI_API_KEY) {
+      throw new Error('Assembly AI API key is not configured');
+    }
+
     const pollingEndpoint = `https://api.assemblyai.com/v2/transcript/${transcriptId}`;
     
     while (true) {
       const response = await fetch(pollingEndpoint, {
         headers: {
-          'authorization': ASSEMBLY_AI_API_KEY
+          'authorization': process.env.NEXT_PUBLIC_ASSEMBLY_AI_API_KEY
         }
       });
 
@@ -513,16 +521,19 @@ export default function DiagramEditor() {
   };
 
   const getTranscriptFromRecording = async (): Promise<string | null> => {
+    if (!process.env.NEXT_PUBLIC_ASSEMBLY_AI_API_KEY) {
+      throw new Error('Assembly AI API key is not configured');
+    }
+
     if (audioChunks.length === 0) return null;
     
     const audioBlob = new Blob(audioChunks, { type: 'audio/mp3' });
     
     try {
-      // Upload to AssemblyAI
       const uploadResponse = await fetch('https://api.assemblyai.com/v2/upload', {
         method: 'POST',
         headers: {
-          'authorization': ASSEMBLY_AI_API_KEY
+          'authorization': process.env.NEXT_PUBLIC_ASSEMBLY_AI_API_KEY
         },
         body: audioBlob
       });
@@ -534,7 +545,7 @@ export default function DiagramEditor() {
       const transcriptResponse = await fetch('https://api.assemblyai.com/v2/transcript', {
         method: 'POST',
         headers: {
-          'authorization': ASSEMBLY_AI_API_KEY,
+          'authorization': process.env.NEXT_PUBLIC_ASSEMBLY_AI_API_KEY,
           'content-type': 'application/json'
         },
         body: JSON.stringify({
