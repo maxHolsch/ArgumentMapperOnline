@@ -89,11 +89,6 @@ export default function DiagramEditor() {
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
   const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
   const [lastTranscript, setLastTranscript] = useState<string>('');
-  if (!process.env.NEXT_PUBLIC_ASSEMBLY_AI_API_KEY) {
-    console.error('NEXT_PUBLIC_ASSEMBLY_AI_API_KEY is not set in environment variables');
-  }
-
-  const ASSEMBLY_AI_API_KEY = process.env.NEXT_PUBLIC_ASSEMBLY_AI_API_KEY;
   const [editorView, setEditorView] = useState<'code' | 'transcript'>('transcript');
   const [uploadedTranscript, setUploadedTranscript] = useState<string>('');
   const [editingNode, setEditingNode] = useState<string | null>(null);
@@ -533,7 +528,8 @@ export default function DiagramEditor() {
       const uploadResponse = await fetch('https://api.assemblyai.com/v2/upload', {
         method: 'POST',
         headers: {
-          'authorization': process.env.NEXT_PUBLIC_ASSEMBLY_AI_API_KEY
+          'authorization': process.env.NEXT_PUBLIC_ASSEMBLY_AI_API_KEY,
+          'content-type': 'application/octet-stream'
         },
         body: audioBlob
       });
@@ -541,7 +537,6 @@ export default function DiagramEditor() {
       const uploadResult = await uploadResponse.json();
       const audioUrl = uploadResult.upload_url;
 
-      // Request transcription
       const transcriptResponse = await fetch('https://api.assemblyai.com/v2/transcript', {
         method: 'POST',
         headers: {
@@ -556,7 +551,7 @@ export default function DiagramEditor() {
 
       const transcriptResult = await transcriptResponse.json();
       const instruction = await pollTranscriptResult(transcriptResult.id);
-      setVoiceInstruction(instruction); // Store in separate state
+      setVoiceInstruction(instruction);
       return instruction;
     } catch (error) {
       console.error('Error getting voice instruction:', error);
@@ -717,7 +712,7 @@ export default function DiagramEditor() {
       const uploadResponse = await fetch('https://api.assemblyai.com/v2/upload', {
         method: 'POST',
         headers: {
-          'authorization': ASSEMBLY_AI_API_KEY
+          'authorization': process.env.NEXT_PUBLIC_ASSEMBLY_AI_API_KEY
         },
         body: audioBlob
       });
@@ -728,7 +723,7 @@ export default function DiagramEditor() {
       const transcriptResponse = await fetch('https://api.assemblyai.com/v2/transcript', {
         method: 'POST',
         headers: {
-          'authorization': ASSEMBLY_AI_API_KEY,
+          'authorization': process.env.NEXT_PUBLIC_ASSEMBLY_AI_API_KEY,
           'content-type': 'application/json'
         },
         body: JSON.stringify({
