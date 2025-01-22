@@ -704,6 +704,10 @@ export default function DiagramEditor() {
   };
 
   const getVoiceEditInstructions = async (): Promise<string | null> => {
+    if (!process.env.NEXT_PUBLIC_ASSEMBLY_AI_API_KEY) {
+      throw new Error('Assembly AI API key is not configured');
+    }
+
     if (voiceEditChunks.length === 0) return null;
     
     const audioBlob = new Blob(voiceEditChunks, { type: 'audio/mp3' });
@@ -712,7 +716,8 @@ export default function DiagramEditor() {
       const uploadResponse = await fetch('https://api.assemblyai.com/v2/upload', {
         method: 'POST',
         headers: {
-          'authorization': process.env.NEXT_PUBLIC_ASSEMBLY_AI_API_KEY
+          'authorization': process.env.NEXT_PUBLIC_ASSEMBLY_AI_API_KEY,
+          'content-type': 'application/octet-stream'
         },
         body: audioBlob
       });
