@@ -113,7 +113,7 @@ export default function DiagramEditor() {
     setMounted(true);
   }, []);
 
-  // Render diagram with error handling
+  // Render diagram  with error handling
   const renderDiagram = useCallback(async () => {
     if (!mounted || !diagramRef.current) return;
 
