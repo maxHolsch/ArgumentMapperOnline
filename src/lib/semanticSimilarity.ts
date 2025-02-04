@@ -1,4 +1,4 @@
-import { encode } from 'gpt-3-encoder'; // We'll need to add this package
+// Removed unused import
 
 interface Vector {
   [key: string]: number;
