@@ -138,7 +138,7 @@ export default function DiagramEditor() {
           const textElements = svgElement.querySelectorAll('text');
           textElements.forEach(textElement => {
             textElement.style.cursor = 'pointer';
-            textElement.addEventListener('click', createEditHandler(textElement));
+            textElement.addEventListener('click', createEditHandler(textElement) as EventListener);
           });
 
           // Handle nodes (rectangles with text)
@@ -146,8 +146,8 @@ export default function DiagramEditor() {
           nodeElements.forEach(node => {
             const textElement = node.querySelector('text, .nodeLabel');
             if (textElement) {
-              node.style.cursor = 'pointer';
-              node.addEventListener('click', createEditHandler(textElement));
+              (node as HTMLElement).style.cursor = 'pointer';
+              node.addEventListener('click', createEditHandler(textElement) as EventListener);
             }
           });
         }
@@ -171,7 +171,7 @@ export default function DiagramEditor() {
     } catch (error) {
       console.error('Failed to render diagram:', error);
       if (diagramRef.current) {
-        diagramRef.current.innerHTML = `<div class="text-red-500">Failed to render diagram: ${error.message}</div>`;
+        diagramRef.current.innerHTML = `<div class="text-red-500">Failed to render diagram: ${error instanceof Error ? error.message : 'Unknown error'}</div>`;
       }
     }
   }, [code, mounted]);
@@ -362,10 +362,10 @@ export default function DiagramEditor() {
       // First, upload the audio file
       const uploadResponse = await fetch('https://api.assemblyai.com/v2/upload', {
         method: 'POST',
-        headers: {
-          'authorization': ASSEMBLY_AI_API_KEY,
+        headers: new Headers({
+          'authorization': ASSEMBLY_AI_API_KEY || '',
           'content-type': 'application/octet-stream',
-        },
+        }),
         body: audioBlob
       });
 
@@ -380,10 +380,10 @@ export default function DiagramEditor() {
       // Then, request the transcript
       const transcriptResponse = await fetch('https://api.assemblyai.com/v2/transcript', {
         method: 'POST',
-        headers: {
-          'authorization': ASSEMBLY_AI_API_KEY,
+        headers: new Headers({
+          'authorization': ASSEMBLY_AI_API_KEY || '',
           'content-type': 'application/json',
-        },
+        }),
         body: JSON.stringify({
           audio_url: audioUrl,
           language_code: 'en',
@@ -408,7 +408,7 @@ export default function DiagramEditor() {
       
     } catch (error) {
       console.error('Error in AssemblyAI pipeline:', error);
-      toast.error(`Transcription failed: ${error.message}`);
+      toast.error(`Transcription failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
@@ -417,9 +417,9 @@ export default function DiagramEditor() {
     
     while (true) {
       const response = await fetch(pollingEndpoint, {
-        headers: {
-          'authorization': ASSEMBLY_AI_API_KEY
-        }
+        headers: new Headers({
+          'authorization': ASSEMBLY_AI_API_KEY || ''
+        })
       });
 
       const result = await response.json();
@@ -513,9 +513,9 @@ export default function DiagramEditor() {
       // Upload to AssemblyAI
       const uploadResponse = await fetch('https://api.assemblyai.com/v2/upload', {
         method: 'POST',
-        headers: {
-          'authorization': ASSEMBLY_AI_API_KEY
-        },
+        headers: new Headers({
+          'authorization': ASSEMBLY_AI_API_KEY || ''
+        }),
         body: audioBlob
       });
 
@@ -525,10 +525,10 @@ export default function DiagramEditor() {
       // Request transcription
       const transcriptResponse = await fetch('https://api.assemblyai.com/v2/transcript', {
         method: 'POST',
-        headers: {
-          'authorization': ASSEMBLY_AI_API_KEY,
+        headers: new Headers({
+          'authorization': ASSEMBLY_AI_API_KEY || '',
           'content-type': 'application/json'
-        },
+        }),
         body: JSON.stringify({
           audio_url: audioUrl,
           language_code: 'en'
@@ -552,9 +552,9 @@ export default function DiagramEditor() {
       
       const response = await fetch('/api/analyze', {
         method: 'POST',
-        headers: {
+        headers: new Headers({
           'Content-Type': 'application/json',
-        },
+        }),
         body: JSON.stringify({
           action: 'editGraph',
           instruction, // Use instruction instead of transcript
@@ -697,9 +697,9 @@ export default function DiagramEditor() {
     try {
       const uploadResponse = await fetch('https://api.assemblyai.com/v2/upload', {
         method: 'POST',
-        headers: {
-          'authorization': ASSEMBLY_AI_API_KEY
-        },
+        headers: new Headers({
+          'authorization': ASSEMBLY_AI_API_KEY || ''
+        }),
         body: audioBlob
       });
 
@@ -708,10 +708,10 @@ export default function DiagramEditor() {
 
       const transcriptResponse = await fetch('https://api.assemblyai.com/v2/transcript', {
         method: 'POST',
-        headers: {
-          'authorization': ASSEMBLY_AI_API_KEY,
+        headers: new Headers({
+          'authorization': ASSEMBLY_AI_API_KEY || '',
           'content-type': 'application/json'
-        },
+        }),
         body: JSON.stringify({
           audio_url: audioUrl,
           language_code: 'en'
