@@ -1,62 +1,10 @@
 import { Anthropic } from '@anthropic-ai/sdk';
 import { compareTexts } from './semanticSimilarity';
 
-const MAX_RETRIES = 3;
-const TIMEOUT_MS = 50000; // 50 seconds
-
 export class TranscriptAnalyzer {
-    private async fetchWithRetry(url: string, options: RequestInit, retries = MAX_RETRIES): Promise<Response> {
-        try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
-
-            const response = await fetch(url, {
-                ...options,
-                signal: controller.signal
-            });
-
-            clearTimeout(timeoutId);
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            return response;
-        } catch (error) {
-            if (retries > 0) {
-                // Add exponential backoff
-                const delay = Math.pow(2, MAX_RETRIES - retries) * 1000;
-                await new Promise(resolve => setTimeout(resolve, delay));
-                return this.fetchWithRetry(url, options, retries - 1);
-            }
-            throw error;
-        }
-    }
-
-    private chunkText(text: string, maxChunkSize = 4000): string[] {
-        const words = text.split(' ');
-        const chunks: string[] = [];
-        let currentChunk = '';
-
-        for (const word of words) {
-            if ((currentChunk + ' ' + word).length <= maxChunkSize) {
-                currentChunk += (currentChunk ? ' ' : '') + word;
-            } else {
-                chunks.push(currentChunk);
-                currentChunk = word;
-            }
-        }
-        
-        if (currentChunk) {
-            chunks.push(currentChunk);
-        }
-
-        return chunks;
-    }
-
     async getMainClaim(transcript: string): Promise<string> {
         try {
-            const response = await this.fetchWithRetry('/api/analyze', {
+            const response = await fetch('/api/analyze', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -67,42 +15,39 @@ export class TranscriptAnalyzer {
                 })
             });
 
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
             const data = await response.json();
             return data.result;
-        } catch (error) {
-            console.error('Error getting main claim:', error);
-            throw error;
+        } catch (e) {
+            throw new Error(`Error in getting main claim: ${e}`);
         }
     }
 
     async generateMermaidDiagram(transcript: string, mainClaim: string): Promise<string> {
         try {
-            // Split long transcripts into chunks
-            const chunks = this.chunkText(transcript);
-            let combinedResult = '';
+            const response = await fetch('/api/analyze', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    action: 'generateDiagram',
+                    transcript,
+                    mainClaim
+                })
+            });
 
-            for (const chunk of chunks) {
-                const response = await this.fetchWithRetry('/api/analyze', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        action: 'generateDiagram',
-                        transcript: chunk,
-                        mainClaim,
-                        previousResult: combinedResult
-                    })
-                });
-
-                const data = await response.json();
-                combinedResult = data.result;
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
             }
 
-            return combinedResult;
-        } catch (error) {
-            console.error('Error generating diagram:', error);
-            throw error;
+            const data = await response.json();
+            return data.result;
+        } catch (e) {
+            throw new Error(`Error in generating Mermaid diagram: ${e}`);
         }
     }
 

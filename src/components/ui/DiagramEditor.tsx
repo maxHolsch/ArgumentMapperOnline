@@ -445,31 +445,38 @@ export default function DiagramEditor() {
 
   const processTranscript = async (transcript: string) => {
     try {
-      const loadingToast = toast.loading('Processing transcript...');
-      const analyzer = new TranscriptAnalyzer();
+        const loadingToast = toast.loading('Processing transcript...');
+        const analyzer = new TranscriptAnalyzer();
 
-      // Add timeout handling
-      const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Request timed out')), 55000);
-      });
+        // Log the initial transcript
+        console.log('Processing Transcript:', transcript);
 
-      const analysisPromise = (async () => {
+        // Run the analysis pipeline
         const mainClaim = await analyzer.getMainClaim(transcript);
         const initialDiagram = await analyzer.generateMermaidDiagram(transcript, mainClaim);
         const improvedDiagram = await analyzer.improveDiagram(initialDiagram);
-        return await analyzer.makeMoreDescriptive(improvedDiagram, transcript);
-      })();
+        const finalDiagram = await analyzer.makeMoreDescriptive(improvedDiagram, transcript);
 
-      const finalDiagram = await Promise.race([analysisPromise, timeoutPromise]);
-      setCode(cleanMermaidCode(finalDiagram as string));
-      
-      toast.dismiss(loadingToast);
-      toast.success('Transcript processed successfully!');
+        setCode(cleanMermaidCode(finalDiagram));
+        
+        // Add delay to ensure diagram is updated
+        setTimeout(async () => {
+            // Check similarity with the final diagram
+            const similarity = await analyzer.checkSemanticSimilarity(transcript, finalDiagram);
+            console.log('Similarity Score:', similarity);
+            
+            if (similarity === 0) {
+                console.warn('Zero similarity detected - Debug Info:');
+                console.log('Final Transcript:', transcript);
+                console.log('Final Diagram:', finalDiagram);
+            }
+        }, 1000);
+        
+        toast.dismiss(loadingToast);
+        toast.success('Transcript processed successfully!');
     } catch (error) {
-      console.error('Error processing transcript:', error);
-      toast.error(error instanceof Error && error.message === 'Request timed out' 
-        ? 'Request timed out. Please try with a shorter transcript or try again.'
-        : 'Failed to process transcript');
+        console.error('Error processing transcript:', error);
+        toast.error('Failed to process transcript');
     }
   };
 
